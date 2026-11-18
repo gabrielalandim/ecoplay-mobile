@@ -1,0 +1,6 @@
+# Força fim de linha LF em todos os sistemas (o Prettier exige LF)
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ttf binary
