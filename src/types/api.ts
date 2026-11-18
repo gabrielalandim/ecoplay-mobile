@@ -5,13 +5,7 @@
 
 export type Role = 'CIDADAO' | 'COOPERATIVA';
 export type CategoriaMaterial =
-  | 'PAPEL'
-  | 'PLASTICO'
-  | 'VIDRO'
-  | 'METAL'
-  | 'ORGANICO'
-  | 'ESPECIAL'
-  | 'REJEITO';
+  'PAPEL' | 'PLASTICO' | 'VIDRO' | 'METAL' | 'ORGANICO' | 'ESPECIAL' | 'REJEITO';
 export type StatusEntrega = 'AGENDADA' | 'CONFIRMADA' | 'CONCLUIDA' | 'RECUSADA';
 export type MotivoRecusa = 'CONTAMINADO' | 'MATERIAL_NAO_ACEITO' | 'NAO_COMPARECEU' | 'OUTRO';
 export type TipoPonto = 'COOPERATIVA' | 'ECOPONTO' | 'PONTO_ESPECIAL';

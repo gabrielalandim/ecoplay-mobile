@@ -63,11 +63,7 @@ export function somarPesos(itens: { pesoKg: number }[]): number {
 
 /** Normaliza texto para buscas sem acento e sem diferenciar maiúsculas. */
 export function normalizar(texto: string): string {
-  return texto
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .trim();
+  return texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 }
 
 export function saudacaoPorHorario(): string {

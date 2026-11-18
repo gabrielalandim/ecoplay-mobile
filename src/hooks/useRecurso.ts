@@ -1,5 +1,5 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { mensagemDeErro } from '@/services/api';
 
@@ -23,7 +23,9 @@ export function useRecurso<T>(buscar: () => Promise<T>): EstadoRecurso<T> {
   const [atualizando, setAtualizando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const buscarRef = useRef(buscar);
-  buscarRef.current = buscar;
+  useEffect(() => {
+    buscarRef.current = buscar;
+  });
   const jaCarregou = useRef(false);
 
   const executar = useCallback(async (modo: 'inicial' | 'atualizar') => {

@@ -36,9 +36,7 @@ export function CatalogoProvider({ children }: { children: ReactNode }) {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
-  const recarregar = useCallback(async () => {
-    setCarregando(true);
-    setErro(null);
+  const aplicar = useCallback(async () => {
     try {
       const [listaMateriais, listaPontos] = await Promise.all([
         materialService.listar(),
@@ -46,6 +44,7 @@ export function CatalogoProvider({ children }: { children: ReactNode }) {
       ]);
       setMateriais(listaMateriais);
       setPontos(listaPontos);
+      setErro(null);
     } catch (e) {
       setErro(mensagemDeErro(e, 'Não foi possível carregar materiais e pontos.'));
     } finally {
@@ -53,9 +52,15 @@ export function CatalogoProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const recarregar = useCallback(async () => {
+    setCarregando(true);
+    await aplicar();
+  }, [aplicar]);
+
+  // Carga inicial (o estado já começa como "carregando").
   useEffect(() => {
-    recarregar();
-  }, [recarregar]);
+    Promise.resolve().then(aplicar);
+  }, [aplicar]);
 
   const value = useMemo<CatalogoContextValue>(() => {
     const mapaMateriais = new Map(materiais.map((m) => [m.id, m]));

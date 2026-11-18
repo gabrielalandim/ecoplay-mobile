@@ -102,7 +102,9 @@ export const gamificacaoService = {
 
   async resgatar(recompensaId: number): Promise<void> {
     if (!usaGamificacaoReal) {
-      throw new Error('A loja de recompensas estará disponível quando a gamificação for integrada.');
+      throw new Error(
+        'A loja de recompensas estará disponível quando a gamificação for integrada.',
+      );
     }
     await gamificacaoApi.post(`/api/gamificacao/recompensas/${recompensaId}/resgatar`);
   },

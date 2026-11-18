@@ -35,7 +35,7 @@ async function identificarSimulado(imagemUri: string): Promise<ClassificacaoIA> 
   await esperar(1200);
   const hash = hashTexto(imagemUri);
   const classe = CLASSES_SIMULADAS[hash % CLASSES_SIMULADAS.length];
-  const confianca = 0.55 + ((hash % 43) / 100); // entre 0.55 e 0.97
+  const confianca = 0.55 + (hash % 43) / 100; // entre 0.55 e 0.97
   return { ...classe, confianca: Math.round(confianca * 100) / 100 };
 }
 

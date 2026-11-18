@@ -1,4 +1,4 @@
-import axios, { AxiosError, type AxiosInstance } from 'axios';
+import { AxiosError, create, isAxiosError, type AxiosInstance } from 'axios';
 
 import { env } from '@/config/env';
 import type { ApiErrorBody } from '@/types/api';
@@ -20,7 +20,7 @@ export function registrarAoExpirarSessao(callback: (() => void) | null) {
 }
 
 function criarCliente(baseURL: string): AxiosInstance {
-  const cliente = axios.create({
+  const cliente = create({
     baseURL,
     timeout: 15000,
     headers: { 'Content-Type': 'application/json' },
@@ -57,8 +57,11 @@ export const gamificacaoApi = criarCliente(env.gamificacaoUrl || env.apiUrl);
 export const iaApi = criarCliente(env.iaUrl);
 
 /** Converte qualquer erro em uma mensagem clara para o usuário. */
-export function mensagemDeErro(erro: unknown, padrao = 'Algo deu errado. Tente novamente.'): string {
-  if (axios.isAxiosError(erro)) {
+export function mensagemDeErro(
+  erro: unknown,
+  padrao = 'Algo deu errado. Tente novamente.',
+): string {
+  if (isAxiosError(erro)) {
     const corpo = erro.response?.data as Partial<ApiErrorBody> | undefined;
     if (corpo?.mensagem) return corpo.mensagem;
 

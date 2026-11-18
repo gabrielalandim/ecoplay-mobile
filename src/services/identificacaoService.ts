@@ -5,7 +5,11 @@ const BASE = '/api/identificacoes';
 
 export const identificacaoService = {
   /** POST /api/identificacoes?usuarioId= — registra o resultado da IA no Oracle. */
-  async registrar(usuarioId: number, materialId: number, confianca: number): Promise<Identificacao> {
+  async registrar(
+    usuarioId: number,
+    materialId: number,
+    confianca: number,
+  ): Promise<Identificacao> {
     const { data } = await api.post<Identificacao>(
       BASE,
       { materialId, confianca: Math.min(1, Math.max(0, confianca)) },
