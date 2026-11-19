@@ -79,7 +79,7 @@ export default function PerfilScreen() {
 
       <Card style={styles.menu}>
         <MenuItem
-          titulo="Desafios"
+          titulo="Desafios e quiz"
           icone="trophy-outline"
           onPress={() => router.push('/desafios')}
         />

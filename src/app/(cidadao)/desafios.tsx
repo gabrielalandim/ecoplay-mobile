@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useCallback, type ComponentProps } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import {
   AppText,
+  Button,
   Card,
   EmptyState,
   ErrorState,
@@ -55,8 +57,9 @@ function MissaoCard({ missao }: { missao: MissaoApi }) {
   );
 }
 
-/** Missões da API .NET de gamificação. */
+/** Missões da API .NET de gamificação e acesso ao quiz diário. */
 export default function DesafiosScreen() {
+  const router = useRouter();
   const buscar = useCallback(
     async () => (gamificacaoService.usaDadosReais ? gamificacaoService.listarMissoes() : []),
     [],
@@ -76,7 +79,7 @@ export default function DesafiosScreen() {
         <EmptyState
           icone="trophy-outline"
           titulo="Gamificação não conectada"
-          descricao="As missões chegam da API de gamificação. Configure EXPO_PUBLIC_GAMIFICACAO_URL para ativar."
+          descricao="Missões e quiz chegam da API de gamificação. Configure EXPO_PUBLIC_GAMIFICACAO_URL para ativar."
         />
       </Screen>
     );
@@ -85,11 +88,26 @@ export default function DesafiosScreen() {
   return (
     <Screen
       title="Desafios"
-      subtitle="Complete missões para ganhar XP."
+      subtitle="Complete missões e responda o quiz para ganhar XP."
       back
       refreshing={atualizando}
       onRefresh={atualizar}
     >
+      <View style={styles.quiz}>
+        <View style={styles.linha}>
+          <Ionicons name="bulb" size={28} color={colors.primaryDark} />
+          <View style={styles.flex}>
+            <AppText variant="subtitle" color={colors.primaryDark}>
+              Quiz do dia
+            </AppText>
+            <AppText variant="caption" color={colors.primaryDark}>
+              5 XP por acerto, até 50 XP por dia.
+            </AppText>
+          </View>
+        </View>
+        <Button title="Responder quiz" icon="play" onPress={() => router.push('/quiz')} />
+      </View>
+
       <AppText variant="subtitle">Missões</AppText>
       {carregando && !missoes ? (
         <LoadingState />
@@ -105,6 +123,12 @@ export default function DesafiosScreen() {
 }
 
 const styles = StyleSheet.create({
+  quiz: {
+    gap: spacing.md,
+    backgroundColor: colors.accent,
+    borderRadius: radius.lg,
+    padding: spacing.xl,
+  },
   card: {
     gap: spacing.md,
   },

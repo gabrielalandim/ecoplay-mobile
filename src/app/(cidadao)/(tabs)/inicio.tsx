@@ -118,7 +118,7 @@ export default function InicioScreen() {
         />
         <AtalhoCard
           titulo="Desafios"
-          descricao="Missões e XP"
+          descricao="Quiz e missões"
           icone="trophy-outline"
           onPress={() => router.push('/desafios')}
         />
