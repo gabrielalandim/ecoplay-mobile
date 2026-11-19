@@ -1,52 +1,23 @@
 import { gamificacaoApi } from './api';
+import { entregaService } from './entregaService';
+import { identificacaoService } from './identificacaoService';
+import { materialService } from './materialService';
 import { usaGamificacaoReal } from '@/config/env';
 import type { Recompensa, ResumoGamificacao } from '@/types/gamificacao';
+import { calcularResumoLocal } from '@/utils/gamificacaoLocal';
 
 /**
  * Integração com a API .NET de gamificação.
- * Enquanto EXPO_PUBLIC_GAMIFICACAO_URL não estiver configurada, o app usa
- * dados de demonstração (sinalizados na interface).
+ * Enquanto EXPO_PUBLIC_GAMIFICACAO_URL não estiver configurada, pontos, nível e
+ * conquistas são calculados no app a partir das entregas e identificações reais
+ * da API Java (ver utils/gamificacaoLocal.ts). A vitrine de recompensas segue
+ * como demonstração até a API .NET estar disponível.
  *
  * Contrato esperado (ver README):
  *   GET  /api/gamificacao/usuarios/{usuarioId}/resumo
  *   GET  /api/gamificacao/recompensas
  *   POST /api/gamificacao/recompensas/{id}/resgatar
  */
-
-const RESUMO_DEMO: Omit<ResumoGamificacao, 'usuarioId'> = {
-  pontos: 320,
-  xp: 420,
-  nivel: 'Muda',
-  nivelNumero: 2,
-  xpProximoNivel: 600,
-  proximoNivel: 'Árvore',
-  conquistas: [
-    {
-      id: 1,
-      nome: 'Primeira entrega',
-      descricao: 'Concluiu a primeira entrega em uma cooperativa.',
-      conquistadaEm: '2026-11-10',
-    },
-    {
-      id: 2,
-      nome: 'Olho clínico',
-      descricao: 'Identificou 5 resíduos com a câmera.',
-      conquistadaEm: '2026-11-12',
-    },
-    {
-      id: 3,
-      nome: 'Guardião do vidro',
-      descricao: 'Entregue 10 kg de vidro.',
-      conquistadaEm: null,
-    },
-    {
-      id: 4,
-      nome: 'Mestre da separação',
-      descricao: 'Tenha 5 entregas sem recusa seguidas.',
-      conquistadaEm: null,
-    },
-  ],
-};
 
 const RECOMPENSAS_DEMO: Recompensa[] = [
   {
@@ -87,7 +58,15 @@ export const gamificacaoService = {
   usaDadosReais: usaGamificacaoReal,
 
   async buscarResumo(usuarioId: number): Promise<ResumoGamificacao> {
-    if (!usaGamificacaoReal) return { usuarioId, ...RESUMO_DEMO };
+    if (!usaGamificacaoReal) {
+      const [entregas, identificacoes, materiais] = await Promise.all([
+        entregaService.listarDoCidadao(usuarioId),
+        identificacaoService.listarDoUsuario(usuarioId).catch(() => []),
+        materialService.listar(),
+      ]);
+      const mapa = new Map(materiais.map((m) => [m.id, m]));
+      return calcularResumoLocal(usuarioId, entregas, identificacoes, (id) => mapa.get(id));
+    }
     const { data } = await gamificacaoApi.get<ResumoGamificacao>(
       `/api/gamificacao/usuarios/${usuarioId}/resumo`,
     );

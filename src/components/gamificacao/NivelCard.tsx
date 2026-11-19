@@ -47,7 +47,8 @@ export function NivelCard({ resumo, demonstracao = false }: NivelCardProps) {
 
       {demonstracao && (
         <AppText variant="caption" color="#B9D7C4">
-          Dados de demonstração · integração com a API de gamificação em andamento
+          Calculado a partir das suas entregas e identificações · integração com a API de
+          gamificação em andamento
         </AppText>
       )}
     </View>
