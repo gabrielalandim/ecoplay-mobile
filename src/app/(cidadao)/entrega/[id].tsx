@@ -1,5 +1,4 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useLocalSearchParams } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { ItensEntrega } from '@/components/entregas/ItensEntrega';
@@ -17,72 +16,30 @@ import {
   Screen,
 } from '@/components/ui';
 import { MOTIVOS_RECUSA } from '@/constants/domain';
-import { useUsuarioLogado } from '@/contexts/AuthContext';
 import { useCatalogo } from '@/contexts/CatalogoContext';
-import { useRecurso } from '@/hooks/useRecurso';
-import { mensagemDeErro } from '@/services/api';
-import { entregaService } from '@/services/entregaService';
+import { useEntregaDetalhe } from '@/hooks/useEntregaDetalhe';
 import { colors, spacing } from '@/theme';
-import { pedirConfirmacao } from '@/utils/dialog';
 import { formatarData, formatarDataCurta } from '@/utils/format';
 
 export default function DetalheEntregaScreen() {
-  const router = useRouter();
-  const usuario = useUsuarioLogado();
   const { pontoPorId } = useCatalogo();
   const { id, criada } = useLocalSearchParams<{ id: string; criada?: string }>();
-  const entregaId = Number(id);
-
-  const buscar = useCallback(
-    () => entregaService.buscarDoCidadao(entregaId, usuario.id),
-    [entregaId, usuario.id],
-  );
-  const { dados: entrega, carregando, erro, recarregar, setDados } = useRecurso(buscar);
-
-  const [reagendando, setReagendando] = useState(false);
-  const [novaData, setNovaData] = useState<string | null>(null);
-  const [processando, setProcessando] = useState<'reagendar' | 'excluir' | null>(null);
-  const [erroAcao, setErroAcao] = useState<string | null>(null);
-  const [sucesso, setSucesso] = useState<string | null>(
-    criada ? 'Entrega agendada! Leve os materiais limpos e separados na data escolhida.' : null,
-  );
-
-  async function handleReagendar() {
-    if (!entrega || !novaData) return;
-    setProcessando('reagendar');
-    setErroAcao(null);
-    try {
-      const atualizada = await entregaService.reagendar(entrega.id, usuario.id, novaData);
-      setDados(atualizada);
-      setReagendando(false);
-      setSucesso(`Entrega reagendada para ${formatarDataCurta(novaData)}.`);
-    } catch (e) {
-      setErroAcao(mensagemDeErro(e, 'Não foi possível reagendar.'));
-    } finally {
-      setProcessando(null);
-    }
-  }
-
-  async function handleExcluir() {
-    if (!entrega) return;
-    const confirmado = await pedirConfirmacao({
-      titulo: 'Cancelar agendamento?',
-      mensagem: 'A entrega será excluída e a cooperativa não vai mais esperar por ela.',
-      textoConfirmar: 'Cancelar entrega',
-      destrutivo: true,
-    });
-    if (!confirmado) return;
-
-    setProcessando('excluir');
-    setErroAcao(null);
-    try {
-      await entregaService.excluir(entrega.id, usuario.id);
-      router.back();
-    } catch (e) {
-      setErroAcao(mensagemDeErro(e, 'Não foi possível cancelar a entrega.'));
-      setProcessando(null);
-    }
-  }
+  const {
+    entrega,
+    carregando,
+    erro,
+    recarregar,
+    reagendando,
+    abrirReagendamento,
+    fecharReagendamento,
+    novaData,
+    setNovaData,
+    processando,
+    erroAcao,
+    sucesso,
+    reagendar,
+    excluir,
+  } = useEntregaDetalhe(Number(id), !!criada);
 
   if (carregando && !entrega) {
     return (
@@ -164,17 +121,14 @@ export default function DetalheEntregaScreen() {
             title="Reagendar"
             icon="calendar-outline"
             variant="outline"
-            onPress={() => {
-              setNovaData(entrega.dataPrevista);
-              setReagendando(true);
-            }}
+            onPress={abrirReagendamento}
           />
           <Button
             title="Cancelar agendamento"
             icon="trash-outline"
             variant="ghost"
             loading={processando === 'excluir'}
-            onPress={handleExcluir}
+            onPress={excluir}
           />
         </View>
       )}
@@ -182,7 +136,7 @@ export default function DetalheEntregaScreen() {
       <BottomSheet
         visivel={reagendando}
         titulo="Escolha a nova data"
-        onFechar={() => setReagendando(false)}
+        onFechar={fecharReagendamento}
       >
         <SeletorData valor={novaData} onChange={setNovaData} />
         {erroAcao && <Banner tipo="erro" mensagem={erroAcao} />}
@@ -191,7 +145,7 @@ export default function DetalheEntregaScreen() {
           icon="checkmark"
           disabled={!novaData || novaData === entrega.dataPrevista}
           loading={processando === 'reagendar'}
-          onPress={handleReagendar}
+          onPress={reagendar}
         />
       </BottomSheet>
     </Screen>
