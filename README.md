@@ -48,33 +48,34 @@ O app tem duas áreas com interfaces diferentes:
 | -------------------------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------- |
 | <img src="docs/screenshots/detalhe-entrega.jpg" width="160" /> | <img src="docs/screenshots/perfil.jpg" width="160" /> | <img src="docs/screenshots/cooperativa-recebidas.jpg" width="160" /> | <img src="docs/screenshots/cooperativa-recusar.jpg" width="160" /> | <img src="docs/screenshots/cooperativa-ponto.jpg" width="160" /> |
 
-### Lista completa (16 telas, sem contar "Sobre o App")
+### Lista completa (17 telas, sem contar "Sobre o App")
 
 | #   | Tela                                                         | Perfil      | Integração                                              |
 | --- | ------------------------------------------------------------ | ----------- | ------------------------------------------------------- |
 | 1   | Login (com seleção Cidadão / Cooperativa)                    | público     | `POST /api/auth/login`                                  |
 | 2   | Cadastro                                                     | público     | `POST /api/usuarios/cadastro`                           |
-| 3   | Início (saudação, nível, atalhos, próxima entrega)           | cidadão     | `GET /api/entregas/cidadao/{id}` + gamificação          |
+| 3   | Início (saudação, nível, atalhos, próxima entrega)           | cidadão     | `GET /api/entregas/cidadao/{id}` + `GET /api/progresso` |
 | 4   | Identificar resíduo → resultado → correção                   | cidadão     | IA + `POST /api/identificacoes` + `PATCH .../confirmar` |
 | 5   | Materiais recicláveis                                        | cidadão     | `GET /api/materiais`                                    |
 | 6   | Pontos de descarte (filtros por material e bairro)           | cidadão     | `GET /api/pontos-descarte`                              |
 | 7   | Minhas entregas (próximas / histórico)                       | cidadão     | `GET /api/entregas/cidadao/{id}`                        |
 | 8   | Agendar entrega                                              | cidadão     | `POST /api/entregas`                                    |
 | 9   | Detalhe da entrega (reagendar / cancelar)                    | cidadão     | `GET`, `PUT .../reagendar`, `DELETE`                    |
-| 10  | Perfil (nível, XP, conquistas, estatísticas)                 | cidadão     | gamificação + `GET /api/identificacoes/usuario/{id}`    |
-| 11  | Recompensas (lojinha)                                        | cidadão     | gamificação (.NET)                                      |
-| 12  | Entregas recebidas (filtro por status)                       | cooperativa | `GET /api/entregas/cooperativa/{id}`                    |
-| 13  | Detalhe da entrega recebida (confirmar / recusar / concluir) | cooperativa | `PATCH .../confirmar`, `.../recusar`, `.../concluir`    |
-| 14  | Meus pontos                                                  | cooperativa | `GET`, `DELETE /api/pontos-descarte`                    |
-| 15  | Cadastrar / editar ponto                                     | cooperativa | `POST`, `PUT /api/pontos-descarte`                      |
-| 16  | Conta da cooperativa (impacto, logout)                       | cooperativa | `GET /api/entregas/cooperativa/{id}`                    |
+| 10  | Perfil (nível, XP, medalhas, estatísticas)                   | cidadão     | `GET /api/progresso` + `GET /api/identificacoes/...`    |
+| 11  | Desafios (missões e progresso)                               | cidadão     | `GET /api/missoes` (.NET)                               |
+| 12  | Quiz do dia                                                  | cidadão     | `GET /api/quiz/hoje`, `POST /api/quiz/respostas` (.NET) |
+| 13  | Entregas recebidas (filtro por status)                       | cooperativa | `GET /api/entregas/cooperativa/{id}`                    |
+| 14  | Detalhe da entrega recebida (confirmar / recusar / concluir) | cooperativa | `PATCH .../confirmar`, `.../recusar`, `.../concluir`    |
+| 15  | Meus pontos                                                  | cooperativa | `GET`, `DELETE /api/pontos-descarte`                    |
+| 16  | Cadastrar / editar ponto                                     | cooperativa | `POST`, `PUT /api/pontos-descarte`                      |
+| 17  | Conta da cooperativa (impacto, logout)                       | cooperativa | `GET /api/entregas/cooperativa/{id}`                    |
 | —   | Sobre o App (hash do commit)                                 | todos       | `app.config.js`                                         |
 
 ## ✅ Requisitos da disciplina
 
 | Requisito                          | Como foi atendido                                                                                                                                                                                                                                                                                                  |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **1. Telas e navegação**           | 16 telas com Expo Router: pilha raiz, abas do cidadão (Início · Identificar · Entregas · Perfil) e abas da cooperativa (Entregas · Meus pontos · Conta).                                                                                                                                                           |
+| **1. Telas e navegação**           | 17 telas com Expo Router: pilha raiz, abas do cidadão (Início · Identificar · Entregas · Perfil) e abas da cooperativa (Entregas · Meus pontos · Conta).                                                                                                                                                           |
 | **2. CRUD com a API Java (Axios)** | Entregas: criar, listar, detalhar, reagendar e excluir. Pontos de descarte (cooperativa): criar, listar, editar e excluir. Todos os dados vêm da API; nada é salvo só no aparelho. Loaders, mensagens de erro e estados vazios em todas as telas.                                                                  |
 | **3. Autenticação**                | Cadastro e login reais com JWT da API Java. Token guardado no `expo-secure-store` e enviado por interceptor do Axios. Rotas protegidas por sessão e por papel com `Stack.Protected`. Logout limpa o token. Sessão expirada (fim do JWT ou resposta 401) faz logout automático com aviso. Validação de formulários. |
 | **4. Identidade visual**           | Paleta "Folha" (contraste WCAG AA), fontes Poppins e Inter em `assets/fonts`, logo e ícones próprios em `assets/images`, cores oficiais da coleta seletiva (CONAMA 275/2001), áreas de toque ≥ 48 dp e textos ≥ 14 sp.                                                                                             |
@@ -120,7 +121,7 @@ ecoplay-mobile/
     │   ├── sobre.tsx        # Sobre o App (hash do commit)
     │   ├── (auth)/          # login, cadastro
     │   ├── (cidadao)/       # (tabs)/inicio, identificar, entregas, perfil
-    │   │                    # materiais, pontos, recompensas, entrega/nova, entrega/[id]
+    │   │                    # materiais, pontos, desafios, quiz, entrega/nova, entrega/[id]
     │   └── (cooperativa)/   # (tabs)/recebidas, meus-pontos, conta
     │                        # recebida/[id], ponto-form
     ├── components/          # Componentes reutilizáveis
@@ -165,7 +166,7 @@ npx expo start
 | `EXPO_PUBLIC_API_URL`         | URL da API Java. Emulador Android: `http://10.0.2.2:8080`. Celular físico: IP da sua máquina, ex.: `http://192.168.0.10:8080`. |
 | `EXPO_PUBLIC_IA_URL`          | Serviço que expõe `POST /api/ia/identificar`. Vazio = usa a própria API Java.                                                  |
 | `EXPO_PUBLIC_IA_MOCK`         | `true` usa classificação simulada até a integração Java → Python ficar pronta.                                                 |
-| `EXPO_PUBLIC_GAMIFICACAO_URL` | URL da API .NET. Vazio = dados de demonstração, sinalizados na tela.                                                           |
+| `EXPO_PUBLIC_GAMIFICACAO_URL` | URL da API .NET. Vazio = XP calculado no app a partir das entregas, sinalizado na tela.                                        |
 
 ### Contas para teste
 
@@ -201,18 +202,17 @@ Classes usadas: `garrafa_pet`, `lata_aluminio`, `garrafa_vidro`, `papelao`, `cas
 
 ### Gamificação (.NET)
 
-O app envia o mesmo JWT emitido pelo Java. Contrato esperado:
+Repositório: [ecoplay-gamification-api](https://github.com/Hayzer3/ecoplay-gamification-api). O app envia o mesmo JWT emitido pelo Java, e a API .NET valida a assinatura com a chave pública RSA do Java. Endpoints usados:
 
 ```
-GET  /api/gamificacao/usuarios/{usuarioId}/resumo
-→ { usuarioId, pontos, xp, nivel, nivelNumero, xpProximoNivel, proximoNivel,
-    conquistas: [{ id, nome, descricao, conquistadaEm }] }
-
-GET  /api/gamificacao/recompensas
-→ [{ id, titulo, descricao, custoPontos, parceiro, disponivel }]
-
-POST /api/gamificacao/recompensas/{id}/resgatar
+GET  /api/progresso       → { usuarioId, xpTotal, nivel, kgEntregues, medalhas[], bairro }
+GET  /api/missoes         → [{ id, titulo, descricao, tipo, meta, xp, progresso, concluida }]
+GET  /api/quiz/hoje       → [{ id, enunciado, alternativas[], categoria }]   (sem gabarito)
+POST /api/quiz/respostas  { perguntaId, indiceAlternativa }
+                          → { correta, xpConcedido, xpQuizHoje, limiteDiario, mensagem }
 ```
+
+O XP das entregas é creditado pela API Java (`POST /api/xp/creditos`) quando a cooperativa conclui a entrega; o app só lê o resultado. Se a API .NET estiver fora do ar, um 401 dela não derruba a sessão: o app volta para o cálculo local (`utils/gamificacaoLocal.ts`) e avisa no card de nível.
 
 ## 📦 Publicação (Firebase App Distribution)
 
