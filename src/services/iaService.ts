@@ -39,6 +39,25 @@ async function identificarSimulado(imagemUri: string): Promise<ClassificacaoIA> 
   return { ...classe, confianca: Math.round(confianca * 100) / 100 };
 }
 
+/**
+ * Classes do modelo MobileNetV2 (TrashNet) do serviço Python, com o material
+ * equivalente no catálogo da API Java.
+ */
+const CLASSES_MODELO: Record<string, Omit<ClassificacaoIA, 'confianca'>> = {
+  cardboard: { classeModelo: 'papelao', categoria: 'PAPEL' },
+  paper: { classeModelo: 'papel', categoria: 'PAPEL' },
+  glass: { classeModelo: 'garrafa_vidro', categoria: 'VIDRO' },
+  metal: { classeModelo: 'lata_aluminio', categoria: 'METAL' },
+  plastic: { classeModelo: 'garrafa_pet', categoria: 'PLASTICO' },
+  trash: { classeModelo: 'guardanapo_sujo', categoria: 'REJEITO' },
+};
+
+interface RespostaClassificacao {
+  classe: string;
+  confianca: number;
+  probabilidades: Record<string, number>;
+}
+
 async function identificarReal(imagemUri: string, mimeType?: string): Promise<ClassificacaoIA> {
   const formData = new FormData();
   const nomeArquivo = imagemUri.split('/').pop() ?? 'residuo.jpg';
@@ -46,23 +65,28 @@ async function identificarReal(imagemUri: string, mimeType?: string): Promise<Cl
 
   if (Platform.OS === 'web') {
     const blob = await (await fetch(imagemUri)).blob();
-    formData.append('file', blob, nomeArquivo);
+    formData.append('image', blob, nomeArquivo);
   } else {
     // Formato aceito pelo FormData do React Native para upload de arquivos.
-    formData.append('file', { uri: imagemUri, name: nomeArquivo, type: tipo } as unknown as Blob);
+    formData.append('image', { uri: imagemUri, name: nomeArquivo, type: tipo } as unknown as Blob);
   }
 
-  const { data } = await iaApi.post<ClassificacaoIA>('/api/ia/identificar', formData, {
+  const { data } = await iaApi.post<RespostaClassificacao>('/classificar', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
-    timeout: 30000,
+    timeout: 60000,
   });
-  return data;
+
+  const classe = CLASSES_MODELO[data.classe];
+  if (!classe) {
+    throw new Error('O modelo retornou uma classe desconhecida. Tente outra foto.');
+  }
+  return { ...classe, confianca: data.confianca };
 }
 
 export const iaService = {
   modoSimulado: env.iaMock,
 
-  /** POST /api/ia/identificar (multipart/form-data, campo "file"). */
+  /** POST /classificar no serviço Python (multipart/form-data, campo "image"). */
   identificar(imagemUri: string, mimeType?: string): Promise<ClassificacaoIA> {
     return env.iaMock ? identificarSimulado(imagemUri) : identificarReal(imagemUri, mimeType);
   },

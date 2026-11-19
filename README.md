@@ -164,8 +164,8 @@ npx expo start
 | Variável                      | Descrição                                                                                                                      |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `EXPO_PUBLIC_API_URL`         | URL da API Java. Emulador Android: `http://10.0.2.2:8080`. Celular físico: IP da sua máquina, ex.: `http://192.168.0.10:8080`. |
-| `EXPO_PUBLIC_IA_URL`          | Serviço que expõe `POST /api/ia/identificar`. Vazio = usa a própria API Java.                                                  |
-| `EXPO_PUBLIC_IA_MOCK`         | `true` usa classificação simulada até a integração Java → Python ficar pronta.                                                 |
+| `EXPO_PUBLIC_IA_URL`          | URL do serviço Python de classificação (`POST /classificar`).                                                                  |
+| `EXPO_PUBLIC_IA_MOCK`         | `true` usa classificação simulada, sem chamar o serviço de IA.                                                                 |
 | `EXPO_PUBLIC_GAMIFICACAO_URL` | URL da API .NET. Vazio = XP calculado no app a partir das entregas, sinalizado na tela.                                        |
 
 ### Contas para teste
@@ -187,18 +187,27 @@ npm run typecheck     # TypeScript
 
 O cliente fica em `src/services/api.ts`. O interceptor de requisição anexa `Authorization: Bearer <token>`, e o de resposta encerra a sessão quando a API devolve 401. As mensagens de erro do `GlobalExceptionHandler` (campo `mensagem`) aparecem direto para o usuário.
 
-### IA de identificação (Python, via Java)
+### IA de identificação (Python)
 
-Contrato combinado com o time de IA:
+Repositório `EcoPlay-AI`: serviço FastAPI com uma MobileNetV2 (ONNX) treinada no TrashNet:
 
 ```
-POST /api/ia/identificar   (multipart/form-data, campo "file")
-→ { "classeModelo": "garrafa_pet", "categoria": "PLASTICO", "confianca": 0.94 }
+POST /classificar   (multipart/form-data, campo "image")
+→ { "classe": "plastic", "confianca": 0.94, "probabilidades": { ... } }
 ```
 
-O app encontra o material pelo campo `classeModelo` cadastrado na API Java (ou, se não achar, pela categoria) e registra o resultado com `POST /api/identificacoes`. Com confiança abaixo de 70%, a tela pergunta "É vidro?" em vez de afirmar. O usuário pode confirmar ou corrigir. A correção é registrada com o material escolhido e confiança 1.
+O app traduz a classe do modelo para o catálogo da API Java (`src/services/iaService.ts`):
 
-Classes usadas: `garrafa_pet`, `lata_aluminio`, `garrafa_vidro`, `papelao`, `casca_fruta`, `pilha`, `guardanapo_sujo`.
+| Classe do modelo | `classeModelo` no Java | Categoria  |
+| ---------------- | ---------------------- | ---------- |
+| `cardboard`      | `papelao`              | `PAPEL`    |
+| `paper`          | `papel`                | `PAPEL`    |
+| `glass`          | `garrafa_vidro`        | `VIDRO`    |
+| `metal`          | `lata_aluminio`        | `METAL`    |
+| `plastic`        | `garrafa_pet`          | `PLASTICO` |
+| `trash`          | `guardanapo_sujo`      | `REJEITO`  |
+
+O material é encontrado pelo `classeModelo` (ou, se não houver, pela categoria) e o resultado é registrado com `POST /api/identificacoes`. Com confiança abaixo de 70%, a tela pergunta "É vidro?" em vez de afirmar. O usuário pode confirmar ou corrigir. A correção é registrada com o material escolhido e confiança 1.
 
 ### Gamificação (.NET)
 
