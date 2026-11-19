@@ -19,7 +19,15 @@ export function registrarAoExpirarSessao(callback: (() => void) | null) {
   aoExpirarSessao = callback;
 }
 
-function criarCliente(baseURL: string): AxiosInstance {
+interface OpcoesCliente {
+  /** Se true, um 401 encerra a sessão (só para a API que emite o token). */
+  encerraSessaoEm401?: boolean;
+}
+
+function criarCliente(
+  baseURL: string,
+  { encerraSessaoEm401 = true }: OpcoesCliente = {},
+): AxiosInstance {
   const cliente = create({
     baseURL,
     timeout: 15000,
@@ -37,7 +45,7 @@ function criarCliente(baseURL: string): AxiosInstance {
     (response) => response,
     (error: AxiosError) => {
       const rotaDeLogin = error.config?.url?.includes('/api/auth/login');
-      if (error.response?.status === 401 && tokenAtual && !rotaDeLogin) {
+      if (encerraSessaoEm401 && error.response?.status === 401 && tokenAtual && !rotaDeLogin) {
         aoExpirarSessao?.();
       }
       return Promise.reject(error);
@@ -50,8 +58,13 @@ function criarCliente(baseURL: string): AxiosInstance {
 /** Cliente da API Java (backend principal). */
 export const api = criarCliente(env.apiUrl);
 
-/** Cliente da API .NET de gamificação (mesmo JWT emitido pelo Java). */
-export const gamificacaoApi = criarCliente(env.gamificacaoUrl || env.apiUrl);
+/**
+ * Cliente da API .NET de gamificação (mesmo JWT emitido pelo Java).
+ * Um 401 aqui não derruba a sessão: o app volta para o cálculo local.
+ */
+export const gamificacaoApi = criarCliente(env.gamificacaoUrl || env.apiUrl, {
+  encerraSessaoEm401: false,
+});
 
 /** Cliente do serviço de identificação por imagem. */
 export const iaApi = criarCliente(env.iaUrl);
