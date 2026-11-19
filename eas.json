@@ -7,7 +7,9 @@
     "development": {
       "developmentClient": false,
       "distribution": "internal",
-      "android": { "buildType": "apk" },
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
         "EXPO_PUBLIC_API_URL": "http://10.0.2.2:8080",
         "EXPO_PUBLIC_IA_MOCK": "true"
@@ -15,19 +17,26 @@
     },
     "preview": {
       "distribution": "internal",
-      "android": { "buildType": "apk" },
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://SEU-WEBAPP-JAVA.azurewebsites.net",
-        "EXPO_PUBLIC_IA_URL": "",
-        "EXPO_PUBLIC_IA_MOCK": "true",
-        "EXPO_PUBLIC_GAMIFICACAO_URL": ""
-      }
+        "EXPO_PUBLIC_API_URL": "https://ecoplay-api-xows.onrender.com",
+        "EXPO_PUBLIC_IA_URL": "https://ecoplay-ai.onrender.com",
+        "EXPO_PUBLIC_IA_MOCK": "false",
+        "EXPO_PUBLIC_GAMIFICACAO_URL": "https://ecoplay-gamification-api.onrender.com"
+      },
+      "requireCommit": true
     },
     "production": {
-      "android": { "buildType": "app-bundle" },
+      "android": {
+        "buildType": "app-bundle"
+      },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://SEU-WEBAPP-JAVA.azurewebsites.net",
-        "EXPO_PUBLIC_IA_MOCK": "false"
+        "EXPO_PUBLIC_API_URL": "https://ecoplay-api-xows.onrender.com",
+        "EXPO_PUBLIC_IA_URL": "https://ecoplay-ai.onrender.com",
+        "EXPO_PUBLIC_IA_MOCK": "false",
+        "EXPO_PUBLIC_GAMIFICACAO_URL": "https://ecoplay-gamification-api.onrender.com"
       }
     }
   }
