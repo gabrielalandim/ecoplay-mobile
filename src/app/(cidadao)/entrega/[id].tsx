@@ -113,6 +113,9 @@ export default function DetalheEntregaScreen() {
 
       <Card style={styles.card}>
         <AppText variant="subtitle">Status</AppText>
+        <AppText variant="bodyStrong" color={colors.primaryDark}>
+          Data prevista: {formatarDataCurta(entrega.dataPrevista)}
+        </AppText>
         <LinhaDoTempo status={entrega.status} />
         {entrega.status === 'RECUSADA' && entrega.motivoRecusa && (
           <Banner
@@ -152,7 +155,7 @@ export default function DetalheEntregaScreen() {
       )}
 
       <AppText variant="caption" color={colors.textMuted}>
-        Agendada em {formatarData(entrega.criadoEm)}
+        Pedido feito em {formatarData(entrega.criadoEm)}
       </AppText>
 
       {podeAlterar && (
