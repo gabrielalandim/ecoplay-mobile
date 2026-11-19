@@ -64,7 +64,7 @@ export function Button({
       ) : (
         <View style={styles.conteudo}>
           {icon && <Ionicons name={icon} size={20} color={cores.texto} />}
-          <AppText variant="bodyStrong" color={cores.texto}>
+          <AppText variant="bodyStrong" color={cores.texto} numberOfLines={1}>
             {title}
           </AppText>
         </View>
@@ -84,12 +84,14 @@ const styles = StyleSheet.create({
   },
   compact: {
     minHeight: TOUCH_MIN,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
   },
   conteudo: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: spacing.sm,
+    maxWidth: '100%',
   },
   pressed: {
     opacity: 0.85,

@@ -297,6 +297,7 @@ const styles = StyleSheet.create({
   },
   inputPeso: {
     flex: 1,
+    minWidth: 0,
     minHeight: TOUCH_MIN,
     borderWidth: 1.5,
     borderColor: colors.border,

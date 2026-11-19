@@ -143,7 +143,7 @@ export default function PontosScreen() {
               acoes={
                 <>
                   <Button
-                    title="Como chegar"
+                    title="Rota"
                     icon="navigate-outline"
                     variant="outline"
                     compact
