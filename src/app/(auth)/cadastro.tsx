@@ -1,78 +1,15 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { PerfilSelector } from '@/components/PerfilSelector';
 import { AppText, Banner, Button, Card, Screen, TextField } from '@/components/ui';
-import { useAuth } from '@/contexts/AuthContext';
-import { mensagemDeErro } from '@/services/api';
+import { useCadastroForm } from '@/hooks/useCadastroForm';
 import { colors, spacing } from '@/theme';
-import type { Role } from '@/types/api';
-import {
-  validarConfirmacaoSenha,
-  validarEmail,
-  validarObrigatorio,
-  validarSenhaCadastro,
-} from '@/utils/validation';
-
-interface Campos {
-  nome: string;
-  email: string;
-  bairro: string;
-  senha: string;
-  confirmacao: string;
-}
-
-type Erros = Partial<Record<keyof Campos, string | null>>;
 
 export default function CadastroScreen() {
   const router = useRouter();
-  const { cadastrar } = useAuth();
-
-  const [perfil, setPerfil] = useState<Role>('CIDADAO');
-  const [campos, setCampos] = useState<Campos>({
-    nome: '',
-    email: '',
-    bairro: '',
-    senha: '',
-    confirmacao: '',
-  });
-  const [erros, setErros] = useState<Erros>({});
-  const [erroGeral, setErroGeral] = useState<string | null>(null);
-  const [enviando, setEnviando] = useState(false);
-
-  function alterar(campo: keyof Campos, valor: string) {
-    setCampos((c) => ({ ...c, [campo]: valor }));
-    if (erros[campo]) setErros((e) => ({ ...e, [campo]: null }));
-  }
-
-  async function handleCadastrar() {
-    const novosErros: Erros = {
-      nome: validarObrigatorio(campos.nome, 'seu nome'),
-      email: validarEmail(campos.email),
-      senha: validarSenhaCadastro(campos.senha),
-      confirmacao: validarConfirmacaoSenha(campos.senha, campos.confirmacao),
-    };
-    setErros(novosErros);
-    setErroGeral(null);
-    if (Object.values(novosErros).some(Boolean)) return;
-
-    setEnviando(true);
-    try {
-      await cadastrar({
-        nome: campos.nome,
-        email: campos.email,
-        senha: campos.senha,
-        bairro: campos.bairro,
-        role: 'CIDADAO',
-      });
-      router.replace('/');
-    } catch (e) {
-      setErroGeral(mensagemDeErro(e, 'Não foi possível criar sua conta.'));
-    } finally {
-      setEnviando(false);
-    }
-  }
+  const { perfil, setPerfil, campos, erros, erroGeral, enviando, alterar, enviar } =
+    useCadastroForm();
 
   return (
     <Screen title="Criar conta" subtitle="Leva menos de um minuto." back>
@@ -142,10 +79,10 @@ export default function CadastroScreen() {
             autoComplete="new-password"
             value={campos.confirmacao}
             onChangeText={(v) => alterar('confirmacao', v)}
-            onSubmitEditing={handleCadastrar}
+            onSubmitEditing={enviar}
             error={erros.confirmacao}
           />
-          <Button title="Criar minha conta" onPress={handleCadastrar} loading={enviando} />
+          <Button title="Criar minha conta" onPress={enviar} loading={enviando} />
         </>
       )}
     </Screen>

@@ -1,45 +1,28 @@
-import { Link, useRouter } from 'expo-router';
-import { useRef, useState, type ComponentRef } from 'react';
+import { Link } from 'expo-router';
+import { useRef, type ComponentRef } from 'react';
 import { StyleSheet, View, type TextInput } from 'react-native';
 
 import { Logo } from '@/components/Logo';
 import { PerfilSelector } from '@/components/PerfilSelector';
 import { AppText, Banner, Button, Screen, TextField } from '@/components/ui';
-import { useAuth } from '@/contexts/AuthContext';
-import { mensagemDeErro } from '@/services/api';
+import { useLoginForm } from '@/hooks/useLoginForm';
 import { colors, spacing } from '@/theme';
-import type { Role } from '@/types/api';
-import { validarEmail, validarSenhaLogin } from '@/utils/validation';
 
 export default function LoginScreen() {
-  const router = useRouter();
-  const { entrar, avisoSessao, limparAviso } = useAuth();
   const senhaRef = useRef<ComponentRef<typeof TextInput>>(null);
-
-  const [perfil, setPerfil] = useState<Role>('CIDADAO');
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
-  const [erros, setErros] = useState<{ email?: string | null; senha?: string | null }>({});
-  const [erroGeral, setErroGeral] = useState<string | null>(null);
-  const [enviando, setEnviando] = useState(false);
-
-  async function handleEntrar() {
-    const novosErros = { email: validarEmail(email), senha: validarSenhaLogin(senha) };
-    setErros(novosErros);
-    setErroGeral(null);
-    if (novosErros.email || novosErros.senha) return;
-
-    setEnviando(true);
-    limparAviso();
-    try {
-      await entrar(email, senha, perfil);
-      router.replace('/');
-    } catch (e) {
-      setErroGeral(mensagemDeErro(e, 'E-mail ou senha inválidos.'));
-    } finally {
-      setEnviando(false);
-    }
-  }
+  const {
+    perfil,
+    setPerfil,
+    email,
+    senha,
+    erros,
+    erroGeral,
+    avisoSessao,
+    enviando,
+    alterarEmail,
+    alterarSenha,
+    enviar,
+  } = useLoginForm();
 
   return (
     <Screen>
@@ -73,10 +56,7 @@ export default function LoginScreen() {
         textContentType="emailAddress"
         returnKeyType="next"
         value={email}
-        onChangeText={(texto) => {
-          setEmail(texto);
-          if (erros.email) setErros((e) => ({ ...e, email: null }));
-        }}
+        onChangeText={alterarEmail}
         onSubmitEditing={() => senhaRef.current?.focus()}
         error={erros.email}
       />
@@ -90,15 +70,12 @@ export default function LoginScreen() {
         textContentType="password"
         returnKeyType="go"
         value={senha}
-        onChangeText={(texto) => {
-          setSenha(texto);
-          if (erros.senha) setErros((e) => ({ ...e, senha: null }));
-        }}
-        onSubmitEditing={handleEntrar}
+        onChangeText={alterarSenha}
+        onSubmitEditing={enviar}
         error={erros.senha}
       />
 
-      <Button title="Entrar" onPress={handleEntrar} loading={enviando} />
+      <Button title="Entrar" onPress={enviar} loading={enviando} />
 
       {perfil === 'CIDADAO' ? (
         <View style={styles.linha}>
