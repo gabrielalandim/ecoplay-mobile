@@ -28,6 +28,7 @@ module.exports = {
   expo: {
     name: 'EcoPlay',
     slug: 'ecoplay-mobile',
+    owner: 'gabilandim',
     scheme: 'ecoplay',
     version: '1.0.0',
     orientation: 'portrait',
@@ -81,7 +82,7 @@ module.exports = {
       commitHash: obterHashDoCommit(),
       buildDate: new Date().toISOString(),
       eas: {
-        projectId: process.env.EAS_PROJECT_ID,
+        projectId: 'ade9143d-1780-413c-af56-81481ccc8a47',
       },
     },
   },
