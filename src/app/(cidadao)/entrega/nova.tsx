@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useLocalSearchParams } from 'expo-router';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { SeletorData } from '@/components/entregas/SeletorData';
@@ -15,84 +14,34 @@ import {
   Screen,
 } from '@/components/ui';
 import { CATEGORIAS, TIPOS_PONTO } from '@/constants/domain';
-import { useUsuarioLogado } from '@/contexts/AuthContext';
-import { useCatalogo } from '@/contexts/CatalogoContext';
-import { mensagemDeErro } from '@/services/api';
-import { entregaService } from '@/services/entregaService';
+import { useNovaEntrega } from '@/hooks/useNovaEntrega';
 import { colors, fonts, radius, spacing, TOUCH_MIN } from '@/theme';
-import { formatarDataCurta, formatarPeso, hojeIso } from '@/utils/format';
-import { parsePeso } from '@/utils/validation';
+import { formatarDataCurta, formatarPeso } from '@/utils/format';
 
 export default function NovaEntregaScreen() {
-  const router = useRouter();
-  const usuario = useUsuarioLogado();
   const params = useLocalSearchParams<{ pontoId?: string; materialId?: string }>();
-  const { pontos, materialPorId, carregando, erro: erroCatalogo, recarregar } = useCatalogo();
+  const {
+    pontos,
+    carregandoCatalogo,
+    erroCatalogo,
+    recarregarCatalogo,
+    pontoId,
+    ponto,
+    data,
+    setData,
+    pesos,
+    materiaisDoPonto,
+    selecionados,
+    pesoTotal,
+    erro,
+    enviando,
+    escolherPonto,
+    alternarMaterial,
+    alterarPeso,
+    agendar,
+  } = useNovaEntrega(params);
 
-  const [pontoId, setPontoId] = useState<number | null>(
-    params.pontoId ? Number(params.pontoId) : null,
-  );
-  const [data, setData] = useState<string | null>(hojeIso());
-  /** materialId -> peso digitado (texto) */
-  const [pesos, setPesos] = useState<Record<number, string>>(
-    params.materialId ? { [Number(params.materialId)]: '' } : {},
-  );
-  const [erro, setErro] = useState<string | null>(null);
-  const [enviando, setEnviando] = useState(false);
-
-  const ponto = pontos.find((p) => p.id === pontoId);
-  const materiaisDoPonto = useMemo(
-    () =>
-      (ponto?.materiaisAceitosIds ?? [])
-        .map((id) => materialPorId(id))
-        .filter((m): m is NonNullable<typeof m> => !!m),
-    [ponto, materialPorId],
-  );
-
-  const selecionados = Object.keys(pesos)
-    .map(Number)
-    .filter((id) => materiaisDoPonto.some((m) => m.id === id));
-  const pesoTotal = selecionados.reduce((total, id) => total + (parsePeso(pesos[id]) ?? 0), 0);
-
-  function alternarMaterial(id: number) {
-    setErro(null);
-    setPesos((atual) => {
-      const copia = { ...atual };
-      if (id in copia) delete copia[id];
-      else copia[id] = '';
-      return copia;
-    });
-  }
-
-  async function handleAgendar() {
-    setErro(null);
-    if (!pontoId) return setErro('Escolha o ponto de descarte.');
-    if (!data) return setErro('Escolha a data da entrega.');
-    if (selecionados.length === 0) return setErro('Selecione pelo menos um material.');
-
-    const itens = selecionados.map((id) => ({ materialId: id, pesoKg: parsePeso(pesos[id]) }));
-    const semPeso = itens.find((i) => i.pesoKg === null);
-    if (semPeso) {
-      const nome = materialPorId(semPeso.materialId)?.nome ?? 'o material';
-      return setErro(`Informe um peso válido para ${nome.toLowerCase()} (ex.: 1,5).`);
-    }
-
-    setEnviando(true);
-    try {
-      const entrega = await entregaService.agendar(usuario.id, {
-        pontoId,
-        dataPrevista: data,
-        itens: itens.map((i) => ({ materialId: i.materialId, pesoKg: i.pesoKg as number })),
-      });
-      router.replace(`/entrega/${entrega.id}?criada=1`);
-    } catch (e) {
-      setErro(mensagemDeErro(e, 'Não foi possível agendar a entrega.'));
-    } finally {
-      setEnviando(false);
-    }
-  }
-
-  if (carregando && pontos.length === 0) {
+  if (carregandoCatalogo && pontos.length === 0) {
     return (
       <Screen title="Agendar entrega" back>
         <LoadingState />
@@ -102,7 +51,7 @@ export default function NovaEntregaScreen() {
   if (erroCatalogo && pontos.length === 0) {
     return (
       <Screen title="Agendar entrega" back>
-        <ErrorState mensagem={erroCatalogo} onRetry={recarregar} />
+        <ErrorState mensagem={erroCatalogo} onRetry={recarregarCatalogo} />
       </Screen>
     );
   }
@@ -123,7 +72,7 @@ export default function NovaEntregaScreen() {
           <Button
             title="Confirmar agendamento"
             icon="checkmark"
-            onPress={handleAgendar}
+            onPress={agendar}
             loading={enviando}
           />
         </View>
@@ -141,10 +90,7 @@ export default function NovaEntregaScreen() {
             return (
               <Pressable
                 key={p.id}
-                onPress={() => {
-                  setPontoId(p.id);
-                  setErro(null);
-                }}
+                onPress={() => escolherPonto(p.id)}
                 accessibilityRole="radio"
                 accessibilityState={{ selected: selecionado }}
                 accessibilityLabel={`${p.nome}, ${p.bairro}`}
@@ -219,9 +165,7 @@ export default function NovaEntregaScreen() {
                   <View style={styles.peso}>
                     <TextInput
                       value={pesos[material.id]}
-                      onChangeText={(texto) =>
-                        setPesos((atual) => ({ ...atual, [material.id]: texto }))
-                      }
+                      onChangeText={(texto) => alterarPeso(material.id, texto)}
                       placeholder="0,0"
                       placeholderTextColor="#7C8A82"
                       keyboardType="decimal-pad"
