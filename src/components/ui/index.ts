@@ -7,6 +7,7 @@ export { Card } from './Card';
 export { Chip, ChipRow } from './Chip';
 export { ProgressBar } from './ProgressBar';
 export { Screen } from './Screen';
+export { SearchField } from './SearchField';
 export { SegmentedControl } from './SegmentedControl';
 export { EmptyState, ErrorState, LoadingState } from './StateViews';
 export { TextField } from './TextField';
