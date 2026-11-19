@@ -102,3 +102,42 @@ export const TIPOS_PONTO: Record<TipoPonto, { label: string; icone: IconName }> 
 
 /** Abaixo deste valor a IA pede ajuda ao usuário ("É vidro ou plástico?"). */
 export const CONFIANCA_MINIMA = 0.7;
+
+/** Orientação padrão de preparo por categoria (usada quando o material não tem texto próprio). */
+export const GUIA_PREPARO: Record<CategoriaMaterial, string[]> = {
+  PAPEL: [
+    'Mantenha seco e sem gordura.',
+    'Desmonte as caixas para ocupar menos espaço.',
+    'Papel engordurado ou papel higiênico vai no rejeito.',
+  ],
+  PLASTICO: [
+    'Esvazie e dê uma enxaguada rápida.',
+    'Amasse garrafas para economizar espaço.',
+    'Tampas também são plástico: podem ir junto.',
+  ],
+  VIDRO: [
+    'Esvazie e enxágue.',
+    'Tire a tampa: ela vai no plástico ou no metal.',
+    'Não quebre: vidro inteiro é mais seguro para o catador.',
+  ],
+  METAL: [
+    'Enxágue latas de alimento.',
+    'Amasse latinhas para economizar espaço.',
+    'Aerossóis só vazios e sem perfurar.',
+  ],
+  ORGANICO: [
+    'Separe restos de comida, cascas e borra de café.',
+    'Ideal para compostagem doméstica ou comunitária.',
+    'Não misture com recicláveis: contamina o material.',
+  ],
+  ESPECIAL: [
+    'Nunca jogue no lixo comum: contamina solo e água.',
+    'Leve a um ponto especial (pilhas, eletrônicos, lâmpadas, óleo).',
+    'Óleo de cozinha: guarde em garrafa PET fechada.',
+  ],
+  REJEITO: [
+    'Vai no lixo comum (não reciclável).',
+    'Exemplos: papel higiênico, fraldas, guardanapos sujos.',
+    'Reduzir o consumo é a melhor saída para o rejeito.',
+  ],
+};
