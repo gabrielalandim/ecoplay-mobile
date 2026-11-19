@@ -1,0 +1,18 @@
+GLOBAL SOLUTION 2026/2 - CITIZENTECH
+Mobile Application Development - FIAP 2TDS
+
+Projeto: EcoPlay
+Grupo: COLOCAR NOME DO GRUPO
+
+Integrantes:
+- Maria Gabriela Landim Severo - RM 565146
+- Camily Vitoria Pereira Maciel - RM 566520
+- Lucas Nunes Soares - RM 566503
+- Samara Porto Souza - RM 559072
+- Eduarda Weiss Ventura - RM 564434
+
+Link do vídeo (YouTube): https://youtu.be/COLOCAR-LINK-AQUI
+Link do GitHub: https://github.com/COLOCAR-USUARIO/COLOCAR-REPOSITORIO
+
+Publicação: Firebase App Distribution (e-mail do professor adicionado como tester)
+Commit publicado: COLOCAR HASH EXIBIDO NA TELA "SOBRE O APP"
