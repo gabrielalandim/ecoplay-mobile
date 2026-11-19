@@ -1,5 +1,4 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useLocalSearchParams } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -13,120 +12,28 @@ import {
   TextField,
 } from '@/components/ui';
 import { CATEGORIAS, TIPOS_PONTO } from '@/constants/domain';
-import { useUsuarioLogado } from '@/contexts/AuthContext';
 import { useCatalogo } from '@/contexts/CatalogoContext';
-import { mensagemDeErro } from '@/services/api';
-import { pontoDescarteService } from '@/services/pontoDescarteService';
+import { usePontoForm } from '@/hooks/usePontoForm';
 import { colors, spacing } from '@/theme';
 import type { TipoPonto } from '@/types/api';
-import { validarObrigatorio } from '@/utils/validation';
 
-interface Campos {
-  nome: string;
-  tipo: TipoPonto;
-  endereco: string;
-  bairro: string;
-  horario: string;
-  materiais: number[];
-}
-
-type Erros = Partial<Record<'nome' | 'endereco' | 'bairro' | 'materiais', string | null>>;
-
-const VAZIO: Campos = {
-  nome: '',
-  tipo: 'COOPERATIVA',
-  endereco: '',
-  bairro: '',
-  horario: '',
-  materiais: [],
-};
-
-/** Cadastro e edição de ponto de descarte (POST/PUT /api/pontos-descarte). */
+/** Cadastro e edição de ponto de descarte. */
 export default function PontoFormScreen() {
-  const router = useRouter();
-  const usuario = useUsuarioLogado();
-  const { materiais, recarregar: recarregarCatalogo } = useCatalogo();
+  const { materiais } = useCatalogo();
   const { id } = useLocalSearchParams<{ id?: string }>();
-  const pontoId = id ? Number(id) : null;
+  const {
+    editando,
+    campos,
+    erros,
+    erroGeral,
+    carregando,
+    salvando,
+    alterar,
+    alternarMaterial,
+    salvar,
+  } = usePontoForm(id ? Number(id) : null);
 
-  const [campos, setCampos] = useState<Campos>(VAZIO);
-  const [erros, setErros] = useState<Erros>({});
-  const [erroGeral, setErroGeral] = useState<string | null>(null);
-  const [carregando, setCarregando] = useState(!!pontoId);
-  const [salvando, setSalvando] = useState(false);
-
-  useEffect(() => {
-    if (!pontoId) return;
-    let ativo = true;
-    pontoDescarteService
-      .buscarPorId(pontoId)
-      .then((ponto) => {
-        if (!ativo) return;
-        setCampos({
-          nome: ponto.nome,
-          tipo: ponto.tipo,
-          endereco: ponto.endereco,
-          bairro: ponto.bairro,
-          horario: ponto.horario ?? '',
-          materiais: ponto.materiaisAceitosIds,
-        });
-      })
-      .catch((e) => ativo && setErroGeral(mensagemDeErro(e)))
-      .finally(() => ativo && setCarregando(false));
-    return () => {
-      ativo = false;
-    };
-  }, [pontoId]);
-
-  function alterar<K extends keyof Campos>(campo: K, valor: Campos[K]) {
-    setCampos((c) => ({ ...c, [campo]: valor }));
-    if (campo in erros) setErros((e) => ({ ...e, [campo]: null }));
-  }
-
-  function alternarMaterial(materialId: number) {
-    alterar(
-      'materiais',
-      campos.materiais.includes(materialId)
-        ? campos.materiais.filter((m) => m !== materialId)
-        : [...campos.materiais, materialId],
-    );
-  }
-
-  async function handleSalvar() {
-    const novosErros: Erros = {
-      nome: validarObrigatorio(campos.nome, 'o nome do ponto'),
-      endereco: validarObrigatorio(campos.endereco, 'o endereço'),
-      bairro: validarObrigatorio(campos.bairro, 'o bairro'),
-      materiais: campos.materiais.length === 0 ? 'Selecione ao menos um material aceito.' : null,
-    };
-    setErros(novosErros);
-    setErroGeral(null);
-    if (Object.values(novosErros).some(Boolean)) return;
-
-    const dados = {
-      nome: campos.nome.trim(),
-      tipo: campos.tipo,
-      endereco: campos.endereco.trim(),
-      bairro: campos.bairro.trim(),
-      horario: campos.horario.trim() || undefined,
-      cooperativaId: usuario.id,
-      materiaisAceitosIds: campos.materiais,
-    };
-
-    setSalvando(true);
-    try {
-      if (pontoId) await pontoDescarteService.atualizar(pontoId, dados);
-      else await pontoDescarteService.cadastrar(dados);
-      await recarregarCatalogo();
-      router.back();
-    } catch (e) {
-      setErroGeral(mensagemDeErro(e, 'Não foi possível salvar o ponto.'));
-    } finally {
-      setSalvando(false);
-    }
-  }
-
-  const titulo = pontoId ? 'Editar ponto' : 'Novo ponto';
+  const titulo = editando ? 'Editar ponto' : 'Novo ponto';
 
   if (carregando) {
     return (
@@ -143,10 +50,10 @@ export default function PontoFormScreen() {
       back
       footer={
         <Button
-          title={pontoId ? 'Salvar alterações' : 'Cadastrar ponto'}
+          title={editando ? 'Salvar alterações' : 'Cadastrar ponto'}
           icon="checkmark"
           loading={salvando}
-          onPress={handleSalvar}
+          onPress={salvar}
         />
       }
     >
