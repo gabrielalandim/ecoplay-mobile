@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
-import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ItensEntrega } from '@/components/entregas/ItensEntrega';
@@ -18,96 +17,37 @@ import {
   TextField,
 } from '@/components/ui';
 import { MOTIVOS_RECUSA } from '@/constants/domain';
-import { useUsuarioLogado } from '@/contexts/AuthContext';
 import { useCatalogo } from '@/contexts/CatalogoContext';
-import { useRecurso } from '@/hooks/useRecurso';
-import { mensagemDeErro } from '@/services/api';
-import { entregaService } from '@/services/entregaService';
+import { useEntregaRecebida } from '@/hooks/useEntregaRecebida';
 import { colors, radius, spacing, TOUCH_MIN } from '@/theme';
-import type { Entrega, MotivoRecusa } from '@/types/api';
-import { pedirConfirmacao } from '@/utils/dialog';
+import type { MotivoRecusa } from '@/types/api';
 import { formatarDataCurta } from '@/utils/format';
 
-type Acao = 'confirmar' | 'recusar' | 'concluir';
-
 export default function DetalheEntregaRecebidaScreen() {
-  const usuario = useUsuarioLogado();
   const { pontoPorId } = useCatalogo();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const entregaId = Number(id);
-
-  // A API não tem GET por id para cooperativa: buscamos a lista e filtramos.
-  const buscar = useCallback(async () => {
-    const entregas = await entregaService.listarDaCooperativa(usuario.id);
-    const entrega = entregas.find((e) => e.id === entregaId);
-    if (!entrega) throw new Error('Entrega não encontrada para esta cooperativa.');
-    return entrega;
-  }, [entregaId, usuario.id]);
-
-  const { dados: entrega, carregando, erro, recarregar, setDados } = useRecurso(buscar);
-
-  const [processando, setProcessando] = useState<Acao | null>(null);
-  const [erroAcao, setErroAcao] = useState<string | null>(null);
-  const [sucesso, setSucesso] = useState<string | null>(null);
-  const [recusando, setRecusando] = useState(false);
-  const [motivo, setMotivo] = useState<MotivoRecusa | null>(null);
-  const [observacao, setObservacao] = useState('');
-
-  async function executar(acao: Acao, chamada: () => Promise<Entrega>, mensagem: string) {
-    setProcessando(acao);
-    setErroAcao(null);
-    setSucesso(null);
-    try {
-      const atualizada = await chamada();
-      setDados(atualizada);
-      setSucesso(mensagem);
-      return true;
-    } catch (e) {
-      setErroAcao(mensagemDeErro(e));
-      return false;
-    } finally {
-      setProcessando(null);
-    }
-  }
-
-  async function handleConfirmar() {
-    if (!entrega) return;
-    await executar(
-      'confirmar',
-      () => entregaService.confirmar(entrega.id, usuario.id),
-      'Entrega confirmada. O cidadão já pode trazer os materiais.',
-    );
-  }
-
-  async function handleConcluir() {
-    if (!entrega) return;
-    const ok = await pedirConfirmacao({
-      titulo: 'Concluir entrega?',
-      mensagem:
-        'Confirme que os materiais foram recebidos e conferidos. Isso gera os pontos do cidadão.',
-      textoConfirmar: 'Concluir',
-    });
-    if (!ok) return;
-    await executar(
-      'concluir',
-      () => entregaService.concluir(entrega.id, usuario.id),
-      'Entrega concluída! Os pontos do cidadão serão calculados.',
-    );
-  }
-
-  async function handleRecusar() {
-    if (!entrega || !motivo) return;
-    const ok = await executar(
-      'recusar',
-      () => entregaService.recusar(entrega.id, usuario.id, motivo, observacao),
-      'Entrega recusada. O cidadão verá o motivo informado.',
-    );
-    if (ok) {
-      setRecusando(false);
-      setMotivo(null);
-      setObservacao('');
-    }
-  }
+  const {
+    entrega,
+    carregando,
+    erro,
+    recarregar,
+    processando,
+    erroAcao,
+    sucesso,
+    podeConfirmar,
+    podeConcluir,
+    podeRecusar,
+    recusando,
+    abrirRecusa,
+    fecharRecusa,
+    motivo,
+    setMotivo,
+    observacao,
+    setObservacao,
+    confirmar,
+    concluir,
+    recusar,
+  } = useEntregaRecebida(Number(id));
 
   if (carregando && !entrega) {
     return (
@@ -125,9 +65,6 @@ export default function DetalheEntregaRecebidaScreen() {
   }
 
   const ponto = pontoPorId(entrega.pontoId);
-  const podeConfirmar = entrega.status === 'AGENDADA';
-  const podeConcluir = entrega.status === 'CONFIRMADA';
-  const podeRecusar = podeConfirmar || podeConcluir;
 
   return (
     <Screen
@@ -163,7 +100,7 @@ export default function DetalheEntregaRecebidaScreen() {
           title="Confirmar recebimento"
           icon="checkmark-circle-outline"
           loading={processando === 'confirmar'}
-          onPress={handleConfirmar}
+          onPress={confirmar}
         />
       )}
       {podeConcluir && (
@@ -172,7 +109,7 @@ export default function DetalheEntregaRecebidaScreen() {
           icon="trophy-outline"
           variant="accent"
           loading={processando === 'concluir'}
-          onPress={handleConcluir}
+          onPress={concluir}
         />
       )}
       {podeRecusar && (
@@ -180,18 +117,11 @@ export default function DetalheEntregaRecebidaScreen() {
           title="Recusar entrega"
           icon="close-circle-outline"
           variant="outline"
-          onPress={() => {
-            setErroAcao(null);
-            setRecusando(true);
-          }}
+          onPress={abrirRecusa}
         />
       )}
 
-      <BottomSheet
-        visivel={recusando}
-        titulo="Por que recusar?"
-        onFechar={() => setRecusando(false)}
-      >
+      <BottomSheet visivel={recusando} titulo="Por que recusar?" onFechar={fecharRecusa}>
         <View style={styles.motivos}>
           {(Object.keys(MOTIVOS_RECUSA) as MotivoRecusa[]).map((m) => {
             const selecionado = motivo === m;
@@ -227,7 +157,7 @@ export default function DetalheEntregaRecebidaScreen() {
           variant="danger"
           disabled={!motivo}
           loading={processando === 'recusar'}
-          onPress={handleRecusar}
+          onPress={recusar}
         />
       </BottomSheet>
     </Screen>
