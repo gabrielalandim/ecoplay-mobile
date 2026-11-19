@@ -1,7 +1,8 @@
 {
   "cli": {
     "version": ">= 16.0.0",
-    "appVersionSource": "local"
+    "appVersionSource": "local",
+    "requireCommit": true
   },
   "build": {
     "development": {
@@ -25,8 +26,7 @@
         "EXPO_PUBLIC_IA_URL": "https://ecoplay-ai.onrender.com",
         "EXPO_PUBLIC_IA_MOCK": "false",
         "EXPO_PUBLIC_GAMIFICACAO_URL": "https://ecoplay-gamification-api.onrender.com"
-      },
-      "requireCommit": true
+      }
     },
     "production": {
       "android": {
