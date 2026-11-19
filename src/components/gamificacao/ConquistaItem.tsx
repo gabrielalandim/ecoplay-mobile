@@ -7,7 +7,7 @@ import type { Conquista } from '@/types/gamificacao';
 import { formatarData } from '@/utils/format';
 
 export function ConquistaItem({ conquista }: { conquista: Conquista }) {
-  const conquistada = !!conquista.conquistadaEm;
+  const { conquistada } = conquista;
   return (
     <View
       style={[styles.item, !conquistada && styles.bloqueada]}
@@ -25,7 +25,7 @@ export function ConquistaItem({ conquista }: { conquista: Conquista }) {
         <AppText variant="caption" color={colors.textMuted}>
           {conquista.descricao}
         </AppText>
-        {conquistada && (
+        {conquistada && conquista.conquistadaEm && (
           <AppText variant="caption" color={colors.primary}>
             Conquistada em {formatarData(conquista.conquistadaEm)}
           </AppText>

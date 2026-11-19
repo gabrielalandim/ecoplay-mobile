@@ -59,7 +59,7 @@ export default function PerfilScreen() {
       ) : (
         dados && (
           <>
-            <NivelCard resumo={dados.resumo} demonstracao={!gamificacaoService.usaDadosReais} />
+            <NivelCard resumo={dados.resumo} demonstracao={dados.resumo.origem === 'local'} />
 
             <Card style={styles.estatisticas}>
               <Estatistica valor={String(concluidas.length)} rotulo="entregas concluídas" />
@@ -79,9 +79,9 @@ export default function PerfilScreen() {
 
       <Card style={styles.menu}>
         <MenuItem
-          titulo="Recompensas"
-          icone="gift-outline"
-          onPress={() => router.push('/recompensas')}
+          titulo="Desafios"
+          icone="trophy-outline"
+          onPress={() => router.push('/desafios')}
         />
         <MenuItem
           titulo="Materiais recicláveis"

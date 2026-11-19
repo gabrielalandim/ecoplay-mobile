@@ -60,7 +60,7 @@ export function calcularResumoLocal(
   const datasConcluidas = concluidas.map(dataDaEntrega);
   const datasIdentificacoes = confirmadas.map((i) => (i.criadoEm ?? hojeIso()).slice(0, 10));
 
-  const conquistas: Conquista[] = [
+  const conquistas: Omit<Conquista, 'conquistada'>[] = [
     {
       id: 1,
       nome: 'Primeira entrega',
@@ -98,6 +98,7 @@ export function calcularResumoLocal(
     nivelNumero: indiceNivel + 1,
     xpProximoNivel: proximo?.xpMinimo ?? xp,
     proximoNivel: proximo?.nome ?? null,
-    conquistas,
+    conquistas: conquistas.map((c) => ({ ...c, conquistada: !!c.conquistadaEm })),
+    origem: 'local',
   };
 }

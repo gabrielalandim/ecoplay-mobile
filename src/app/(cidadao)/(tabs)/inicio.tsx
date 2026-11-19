@@ -72,7 +72,7 @@ export default function InicioScreen() {
         <>
           {erro && <Banner tipo="erro" mensagem={erro} />}
           {dados?.resumo && (
-            <NivelCard resumo={dados.resumo} demonstracao={!gamificacaoService.usaDadosReais} />
+            <NivelCard resumo={dados.resumo} demonstracao={dados.resumo.origem === 'local'} />
           )}
         </>
       )}
@@ -117,10 +117,10 @@ export default function InicioScreen() {
           onPress={() => router.push('/materiais')}
         />
         <AtalhoCard
-          titulo="Recompensas"
-          descricao="Troque seus pontos"
-          icone="gift-outline"
-          onPress={() => router.push('/recompensas')}
+          titulo="Desafios"
+          descricao="Missões e XP"
+          icone="trophy-outline"
+          onPress={() => router.push('/desafios')}
         />
       </View>
 
